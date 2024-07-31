@@ -3,7 +3,7 @@ import React from 'react'
 function CalculadorAutomotriz() {
   return (
     <div>
-      <h1>CalculadorAutomotriz</h1>
+      <h1>Calculador Automotriz</h1>
     </div>
   )
 }

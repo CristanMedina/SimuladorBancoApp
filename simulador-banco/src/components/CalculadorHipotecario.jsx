@@ -2,7 +2,9 @@ import React from 'react'
 
 function CalculadorHipotecario() {
   return (
-    <div>CalculadorHipotecario</div>
+    <div>
+      <h1>Calculador Hipotecario</h1>
+    </div>
   )
 }
 
