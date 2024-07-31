@@ -7,7 +7,7 @@ function App() {
   return (
     <>
       <div className='card'>
-        <h1>Hola</h1>
+        <h1>Credito Automotriz</h1>
       </div>
     </>
   )
