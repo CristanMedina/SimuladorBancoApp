@@ -10,7 +10,8 @@ function CalculadorAutomotriz() {
   const [enganche, setEnganche] = useState('');
   const [resultado, setResultado] = useState(null);
   const [error, setError] = useState('');
-  const [showTip, setShowTip] = useState(false);
+  const [showTipCapital, setShowTipCapital] = useState(false);
+  const [showTipEnganche, setShowTipEnganche] = useState(false);
 
   const setCapitalOn = (e) => {
     const value = e.target.value.replace(/,/g, '');
@@ -50,8 +51,14 @@ function CalculadorAutomotriz() {
     }
   }, [capital, enganche]);
 
-  const toggleTip = () => {
-    setShowTip(!showTip);
+  const toggleTipCapital = () => {
+    setShowTipCapital(!showTipCapital);
+    setShowTipEnganche(false);
+  };
+
+  const toggleTipEnganche = () => {
+    setShowTipEnganche(!showTipEnganche);
+    setShowTipCapital(false);
   };
 
   return (
@@ -61,14 +68,14 @@ function CalculadorAutomotriz() {
       <div className='input-container'>
         <div className='capital-container'>
           <label htmlFor='capital'>Costo del Auto: </label>
-          <span className='ayuda' onClick={toggleTip} dangerouslySetInnerHTML={{ __html: icons.ayuda }} />
-          { showTip && <div className='tip-capital'>Ingresa el precio en pesos mexicanos.</div>}
+          <span className='ayuda' onClick={toggleTipCapital} dangerouslySetInnerHTML={{ __html: icons.ayuda }} />
+          {showTipCapital && <div className='tip'>Ingresa el precio en pesos mexicanos.</div>}
           <input id='capital' onChange={setCapitalOn} />
         </div>
         <div className='enganche-container'>
           <label htmlFor='enganche'>Enganche: </label>
-          <span className='ayuda' onClick={toggleTip} dangerouslySetInnerHTML={{ __html: icons.ayuda }} />
-          { showTip && <div className='tip-capital'>Ingresa el dinero que daras de entrada. Ingresa el precio en pesos mexicanos</div>}
+          <span className='ayuda' onClick={toggleTipEnganche} dangerouslySetInnerHTML={{ __html: icons.ayuda }} />
+          {showTipEnganche && <div className='tip'>Ingrese el dinero que dará de entrada en pesos mexicanos.</div>}
           <input id='enganche' onChange={setEngancheOn} />
         </div>
       </div>
@@ -85,4 +92,4 @@ export default CalculadorAutomotriz;
 
 const icons = {
   ayuda: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ffffff"><path d="M478-240q21 0 35.5-14.5T528-290q0-21-14.5-35.5T478-340q-21 0-35.5 14.5T428-290q0 21 14.5 35.5T478-240Zm-36-154h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>`
-}
+};
