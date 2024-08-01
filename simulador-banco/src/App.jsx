@@ -1,33 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
 import CalculadorAutomotriz from './components/CalculadorAutomotriz';
-import CalculadorEstudiantil from './components/CalculadorEstudiantil';
-import CalculadorHipotecario from './components/CalculadorHipotecario';
+import logo from '../public/logo.svg';
 import './App.css';
 
 
 const App = () => {
-  const [selectedLoan, setSelectedLoan] = useState(null);
+  
 
   return (
-    <div className='hero'>
-      <h1>Calculadora de Préstamos</h1>
-      <div>
-        <button onClick={() => setSelectedLoan('Automotriz')}>
-          Préstamo Automotriz
-        </button>
-        <button onClick={() => setSelectedLoan('Hipotecario')}>
-          Préstamo Hipotecario
-        </button>
-        <button onClick={() => setSelectedLoan('Estudiantil')}>
-          Préstamo Estudiantil
-        </button>
+    <>
+      <div className='logo'>
+        <img src={logo} alt="Logo" width="200"/>
       </div>
-      <div>
-        {selectedLoan === 'Hipotecario' && <CalculadorHipotecario />}
-        {selectedLoan === 'Automotriz' && <CalculadorAutomotriz />}
-        {selectedLoan === 'Estudiantil' && <CalculadorEstudiantil />}
+      <div className='contenedor'>
+        <CalculadorAutomotriz/>
       </div>
-    </div>
+    </>
   );
 };
 
