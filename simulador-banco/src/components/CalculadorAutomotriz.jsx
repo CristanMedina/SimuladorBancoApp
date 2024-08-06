@@ -3,7 +3,7 @@ import './CalculadorAutomotriz.css';
 
 function CalculadorAutomotriz() {
     const seguro = 4200;
-    const tasaInteresAnual = .1499;
+    const tasaInteresFija = 0.15;
     const plazosDisponibles = [6, 12, 18, 24, 30, 36, 42];
 
     const [capital, setCapital] = useState('');
@@ -11,8 +11,14 @@ function CalculadorAutomotriz() {
     const [porcentajeEnganche, setPorcentajeEnganche] = useState(15);
     const [plazoEnMeses, setPlazoEnMeses] = useState(plazosDisponibles[6]);
     const [resultado, setResultado] = useState(null);
+    const [tablaPagos, setTablaPagos] = useState([]);
     const [error, setError] = useState('');
     const [showTip, setShowTip] = useState(false);
+    const [totalCapitalPagado, setTotalCapitalPagado] = useState(0);
+    const [totalInteresesPagados, setTotalInteresesPagados] = useState(0);
+    const [totalPago, setTotalPago] = useState(0);
+
+    const IVA = 0.16;
 
     const setCapitalOn = (e) => {
         const value = e.target.value.replace(/,/g, '');
@@ -53,31 +59,76 @@ function CalculadorAutomotriz() {
     };
 
     useEffect(() => {
-        if (capital !== '' && enganche !== '' && tasaInteresAnual > 0 && plazoEnMeses > 0) {
+        if (capital !== '' && enganche !== '' && tasaInteresFija > 0 && plazoEnMeses > 0) {
             const montoPrestamo = calcularMontoPrincipal(capital, enganche, seguro);
-            const pagoMensual = calcularPagoMensual(montoPrestamo, tasaInteresAnual, 12, plazoEnMeses / 12);
+            const pagoMensual = calcularPagoMensual(montoPrestamo, tasaInteresFija, plazoEnMeses);
             if (montoPrestamo >= 0) {
                 setResultado({
                     montoPrestamo,
                     pagoMensual
                 });
+                generarTablaPagos(montoPrestamo, plazoEnMeses, pagoMensual);
             } else {
                 setResultado(null);
                 setError('El resultado no puede ser negativo. Verifique los valores ingresados.');
             }
         } else {
             setResultado(null);
+            setTablaPagos([]);
+            setTotalCapitalPagado(0);
+            setTotalInteresesPagados(0);
+            setTotalPago(0);
         }
-    }, [capital, enganche, tasaInteresAnual, plazoEnMeses]);
+    }, [capital, enganche, tasaInteresFija, plazoEnMeses]);
 
     const calcularMontoPrincipal = (capital, enganche, seguro) => {
         return (capital + seguro) - enganche;
     };
 
-    const calcularPagoMensual = (P, r, n, t) => {
-        const tasaMensual = r / n;
-        const totalPagos = n * t;
-        return (P * tasaMensual) / (1 - (1 + tasaMensual) ** -totalPagos);
+    const calcularPagoMensual = (montoPrestamo, tasaInteresFija, plazoEnMeses) => {
+        const interesTotal = montoPrestamo * tasaInteresFija;
+        return (montoPrestamo + interesTotal) / plazoEnMeses;
+    };
+
+    const generarTablaPagos = (montoPrestamo, plazoEnMeses, pagoMensual) => {
+        let tabla = [];
+        let totalCapitalPagado = 0;
+        let totalInteresesPagados = 0;
+        const interesFijo = montoPrestamo * tasaInteresFija;
+        const pagoMensualInteres = interesFijo / plazoEnMeses;
+        let capitalRestante = montoPrestamo;
+
+        for (let i = 1; i <= plazoEnMeses; i++) {
+            const pagoCapital = Math.min(capitalRestante, pagoMensual - pagoMensualInteres); // Evitar que el pago capital sea mayor que el saldo restante
+            
+            tabla.push({
+                mes: i,
+                saldoInsoluto: capitalRestante.toFixed(2),
+                pagoMensualCapital: pagoCapital.toFixed(2),
+                primaSeguroVida: seguro.toFixed(2),
+                pagoMensualInteresesAuto: pagoMensualInteres.toFixed(2),
+            });
+
+            capitalRestante -= pagoCapital;
+            totalCapitalPagado += pagoCapital;
+            totalInteresesPagados += pagoMensualInteres;
+
+            if (capitalRestante <= 0) break; // Detener si el saldo es 0 o menor
+        }
+
+        // Agregar fila de resumen
+        tabla.push({
+            mes: 'Total',
+            saldoInsoluto: '',
+            pagoMensualCapital: totalCapitalPagado.toFixed(2),
+            primaSeguroVida: (seguro * plazoEnMeses).toFixed(2),
+            pagoMensualInteresesAuto: interesFijo.toFixed(2),
+        });
+
+        setTablaPagos(tabla);
+        setTotalCapitalPagado(totalCapitalPagado);
+        setTotalInteresesPagados(totalInteresesPagados);
+        setTotalPago((totalCapitalPagado + interesFijo).toFixed(2));
     };
 
     const toggleTip = () => {
@@ -85,69 +136,99 @@ function CalculadorAutomotriz() {
     };
 
     return (
-        <>
-            <div className='wrapper'>
-                <h1 className='titulo-contenedor'>Calculador de crédito automotriz</h1>
-                <div className='input-container'>
-                    <div className='capital-container'>
-                        <label htmlFor='capital'>¿Cuánto cuesta el auto que deseas? </label>
+        <div className='wrapper'>
+            <h1 className='titulo-contenedor'>Calculador de crédito automotriz</h1>
+            <div className='input-container'>
+                <div className='capital-container'>
+                    <label htmlFor='capital'>¿Cuánto cuesta el auto que deseas? </label>
+                    <input 
+                        placeholder='Ingresa un valor en pesos mexicanos (mxn)' 
+                        id='capital' 
+                        value={capital} 
+                        onChange={setCapitalOn} 
+                    />
+                </div>
+                <div className='enganche-container'>
+                    <label htmlFor='enganche'>¿Cuánto vas a ofrecer de enganche? </label>
+                    <input 
+                        value={enganche} 
+                        placeholder='Ingresa un valor en pesos mexicanos (mxn)' 
+                        id='enganche' 
+                        onChange={setEngancheOn} 
+                    />
+                    <div className='slider-container'>
+                        <label htmlFor='porcentaje'>Porcentaje de enganche:</label>
                         <input 
-                            placeholder='Ingresa un valor en pesos mexicanos (mxn)' 
-                            id='capital' 
-                            value={capital} 
-                            onChange={setCapitalOn} 
+                            type='range' 
+                            id='porcentaje' 
+                            min='15' 
+                            max='100' 
+                            step='1' 
+                            value={porcentajeEnganche} 
+                            onChange={handleSliderChange} 
                         />
-                    </div>
-                    <div className='enganche-container'>
-                        <label htmlFor='enganche'>¿Cuánto vas a ofrecer de enganche? </label>
-                        <input 
-                            value={enganche} 
-                            placeholder='Ingresa un valor en pesos mexicanos (mxn)' 
-                            id='enganche' 
-                            onChange={setEngancheOn} 
-                        />
-                        <div className='slider-container'>
-                            <label htmlFor='porcentaje'>Porcentaje de enganche:</label>
-                            <input 
-                                type='range' 
-                                id='porcentaje' 
-                                min='15' 
-                                max='100' 
-                                step='1' 
-                                value={porcentajeEnganche} 
-                                onChange={handleSliderChange} 
-                            />
-                            <span>{porcentajeEnganche.toFixed(2)}%</span>
-                        </div>
-                    </div>
-                    <div className='plazo-container'>
-                        <label htmlFor='plazoEnMeses'>Plazo del préstamo:</label>
-                        <select
-                            id='plazoEnMeses'
-                            value={plazoEnMeses}
-                            onChange={(e) => setPlazoEnMeses(parseInt(e.target.value, 10))}
-                        >
-                            {plazosDisponibles.map((plazo) => (
-                                <option key={plazo} value={plazo}>{plazo} meses</option>
-                            ))}
-                        </select>
+                        <span>{porcentajeEnganche.toFixed(2)}%</span>
                     </div>
                 </div>
-                {error && <div className="error-container">{error}</div>}
-                <div className="prestamo-container">
-                    <p>Incluye el seguro por $4,200.00</p>
-                    <span className='ayuda' onClick={toggleTip} dangerouslySetInnerHTML={{ __html: icons.ayuda }} />
-                    {showTip && <div className='tip'>Este préstamo incluye seguro de vida, más no incluye el seguro del automóvil que se desea adquirir. Eso debe ser consultado con su vendedor.</div>}
-                    {resultado && (
-                        <>
-                            <h1>Préstamo que se te otorgará: {resultado.montoPrestamo !== null ? `$ ${resultado.montoPrestamo.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ''}</h1>
-                            <h1>Pago mensual: {resultado.pagoMensual !== null ? `$ ${resultado.pagoMensual.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ''}</h1>
-                        </>
-                    )}
-                    <h1>Interés fijo: {tasaInteresAnual * 100} %</h1>
+                <div className='plazo-container'>
+                    <label htmlFor='plazoEnMeses'>Plazo del préstamo:</label>
+                    <select
+                        id='plazoEnMeses'
+                        value={plazoEnMeses}
+                        onChange={(e) => setPlazoEnMeses(parseInt(e.target.value, 10))}
+                    >
+                        {plazosDisponibles.map((plazo) => (
+                            <option key={plazo} value={plazo}>{plazo} meses</option>
+                        ))}
+                    </select>
                 </div>
             </div>
-        </>
+            {error && <div className="error-container">{error}</div>}
+            <div className="prestamo-container">
+                <p>Incluye el seguro por $4,200.00</p>
+                <span className='ayuda' onClick={toggleTip}>❓</span>
+                {showTip && <div className='tip'>Este préstamo incluye seguro de vida, más no incluye el seguro del automóvil que se desea adquirir. Eso debe ser consultado con su vendedor.</div>}
+                {resultado && (
+                    <>
+                        <h1>Préstamo que se te otorgará: ${resultado.montoPrestamo.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h1>
+                        <h1>Pago mensual: ${resultado.pagoMensual.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h1>
+                    </>
+                )}
+            </div>
+            {tablaPagos.length > 0 && (
+                <div className='tabla-container'>
+                    <h2>Tabla de Pagos</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mes</th>
+                                <th>Saldo Insoluto</th>
+                                <th>Pago Capital</th>
+                                <th>Prima Seguro Vida</th>
+                                <th>Intereses</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {tablaPagos.map((pago, index) => (
+                                <tr key={index}>
+                                    <td>{pago.mes}</td>
+                                    <td>{pago.saldoInsoluto ? `$${pago.saldoInsoluto}` : '-'}</td>
+                                    <td>{pago.pagoMensualCapital ? `$${pago.pagoMensualCapital}` : '-'}</td>
+                                    <td>{pago.primaSeguroVida ? `$${pago.primaSeguroVida}` : '-'}</td>
+                                    <td>{pago.pagoMensualInteresesAuto ? `$${pago.pagoMensualInteresesAuto}` : '-'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+            {totalPago > 0 && (
+                <div className='resumen-total-container'>
+                    <h2>Resumen del Pago Total</h2>
+                    <p><strong>Total a Pagar:</strong> ${totalPago.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+            )}
+        </div>
     );
 }
 
