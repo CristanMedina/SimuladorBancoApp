@@ -99,7 +99,7 @@ function CalculadorAutomotriz() {
         let capitalRestante = montoPrestamo;
 
         for (let i = 1; i <= plazoEnMeses; i++) {
-            const pagoCapital = Math.min(capitalRestante, pagoMensual - pagoMensualInteres); // Evitar que el pago capital sea mayor que el saldo restante
+            const pagoCapital = Math.min(capitalRestante, pagoMensual - pagoMensualInteres);
             
             tabla.push({
                 mes: i,
@@ -113,7 +113,7 @@ function CalculadorAutomotriz() {
             totalCapitalPagado += pagoCapital;
             totalInteresesPagados += pagoMensualInteres;
 
-            if (capitalRestante <= 0) break; // Detener si el saldo es 0 o menor
+            if (capitalRestante <= 0) break;
         }
 
         // Agregar fila de resumen
